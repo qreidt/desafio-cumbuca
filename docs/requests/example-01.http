@@ -1,0 +1,5 @@
+## Set key `ABC` with value `1`
+POST http://127.0.0.1:4444
+X-Client-Name: Client-A
+
+SET ABC 1

@@ -1,11 +1,13 @@
 defmodule KVWeb.Router do
   use KVWeb, :router
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  # Middleware para identificar presença do header
+  pipeline :main do
+    plug KVWeb.Plugs.ClientPlug
   end
 
-  scope "/api", KVWeb do
-    pipe_through :api
+  scope "/", KVWeb.Controllers do
+    pipe_through :main
+    post "/", KvController, :handle
   end
 end
