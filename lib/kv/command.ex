@@ -42,6 +42,19 @@ defmodule Kv.Command do
     end
   end
 
+  # Validar e executar o comando ROLLBACK
+  defp execute(:ROLLBACK, param_tokens) do
+    with :ok <- validate_command(:ROLLBACK, param_tokens) do
+      {:ok, "OK"}
+    end
+  end
+
+
+  #####
+  ## Validação de Comandos
+  #####
+
+
   # Validar o comando GET
   # O comando deve sempre receber apenas um parâmetro (<chave>)
   # O parâmetro <chave> deve ser uma string
@@ -71,14 +84,14 @@ defmodule Kv.Command do
     end
   end
 
-  # Validar o comando BEGIN
+  # Validar os comandos BEGIN e ROLLBACK
   # O comando não deve receber argumentos
-  @spec validate_command(:BEGIN, list()) :: :ok | {:err, binary()}
-  def validate_command(:BEGIN, param_tokens) do
+  @spec validate_command(atom(), list()) :: :ok | {:err, binary()}
+  def validate_command(command, param_tokens) when (command in [:BEGIN, :ROLLBACK]) do
     if length(param_tokens) == 0 do
       :ok
     else
-      {:err, "BEGIN - Syntax Error"}
+      {:err, "#{to_string(command)} - Syntax Error"}
     end
   end
 end
