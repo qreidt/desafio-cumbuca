@@ -1,4 +1,4 @@
-defmodule KV.Tokenizer do
+defmodule KV.Command.ParamTokenizer do
 
   @spec tokenize(binary()) :: :err | list()
   def tokenize(input) do

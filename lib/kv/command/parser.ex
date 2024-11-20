@@ -1,4 +1,4 @@
-defmodule KV.CommandParser do
+defmodule KV.Command.Parser do
   @boolean_values ["TRUE", "FALSE"]
 
   @spec parse_params(any()) :: {:ok, []}
@@ -29,7 +29,7 @@ defmodule KV.CommandParser do
     {:ok. ["AB C"]}
 
     iex> parse_string("\"AB\"C\"")
-    {:err. :unclosed_string}
+    {:err. :syntax_error}
 
     iex> parse_string("\"AB\\\"C\"")
     {:ok. ["AB\"C"]}
@@ -44,7 +44,7 @@ defmodule KV.CommandParser do
     {:ok. [10]}
   """
   def parse_params(param_string) when is_binary(param_string) do
-    case KV.Tokenizer.tokenize(param_string) do
+    case KV.Command.ParamTokenizer.tokenize(param_string) do
       :err -> {:err, :syntax_error}
       tokens -> Enum.map(tokens, &parse_token/1)
         |> handle_parsing_result()
