@@ -35,6 +35,13 @@ defmodule Kv.Command do
     end
   end
 
+  # Validar e executar o comando BEGIN
+  defp execute(:BEGIN, param_tokens) do
+    with :ok <- validate_command(:BEGIN, param_tokens) do
+      {:ok, "OK"}
+    end
+  end
+
   # Validar o comando GET
   # O comando deve sempre receber apenas um parâmetro (<chave>)
   # O parâmetro <chave> deve ser uma string
@@ -43,7 +50,7 @@ defmodule Kv.Command do
     if length(param_tokens) == 1 and is_binary(Enum.at(param_tokens, 0)) do
       :ok
     else
-      {:err, "ERR GET <chave> - Syntax Error"}
+      {:err, "GET <chave> - Syntax Error"}
     end
   end
 
@@ -60,7 +67,18 @@ defmodule Kv.Command do
     ) do
       :ok
     else
-      {:err, "ERR SET <chave> <valor> - Syntax Error"}
+      {:err, "SET <chave> <valor> - Syntax Error"}
+    end
+  end
+
+  # Validar o comando BEGIN
+  # O comando não deve receber argumentos
+  @spec validate_command(:BEGIN, list()) :: :ok | {:err, binary()}
+  def validate_command(:BEGIN, param_tokens) do
+    if length(param_tokens) == 0 do
+      :ok
+    else
+      {:err, "BEGIN - Syntax Error"}
     end
   end
 end
