@@ -49,6 +49,12 @@ defmodule Kv.Command do
     end
   end
 
+  # Validar e executar o comando COMMIT
+  defp execute(:COMMIT, param_tokens) do
+    with :ok <- validate_command(:COMMIT, param_tokens) do
+      {:ok, "OK"}
+    end
+  end
 
   #####
   ## Validação de Comandos
@@ -84,10 +90,10 @@ defmodule Kv.Command do
     end
   end
 
-  # Validar os comandos BEGIN e ROLLBACK
+  # Validar os comandos BEGIN, ROLLBACK e COMMIT
   # O comando não deve receber argumentos
   @spec validate_command(atom(), list()) :: :ok | {:err, binary()}
-  def validate_command(command, param_tokens) when (command in [:BEGIN, :ROLLBACK]) do
+  def validate_command(command, param_tokens) when (command in [:BEGIN, :ROLLBACK, :COMMIT]) do
     if length(param_tokens) == 0 do
       :ok
     else
