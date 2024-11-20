@@ -59,7 +59,7 @@ defmodule KV.Command.Parser do
     cond do
       is_boolean_token?(token) -> {:ok, parse_boolean(token)}
       is_integer_token?(token) -> {:ok, String.to_integer(token)}
-      is_nil_token?(token) -> {:ok, :NIL}
+      is_nil_token?(token) -> {:ok, :nil}
       is_quoted_string?(token) -> {:ok, parse_quoted_string(token)}
       true -> {:ok, token}
     end

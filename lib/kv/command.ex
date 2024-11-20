@@ -1,17 +1,18 @@
-defmodule Kv.Command do
+defmodule KV.Command do
 
   @spec execute(binary()) :: {:error, binary()} | {:ok, binary()}
   def execute(complete_command) do
     [command, params] = split_command_and_params(complete_command)
-    param_tokens = KV.Command.ParamTokenizer.tokenize(params)
 
-    case command do
-      "GET" -> execute(:GET, param_tokens)
-      "SET" -> execute(:SET, param_tokens)
-      "BEGIN" -> execute(:BEGIN, param_tokens)
-      "ROLLBACK" -> execute(:ROLLBACK, param_tokens)
-      "COMMIT" -> execute(:COMMIT, param_tokens)
-      _ -> {:error, "Comando Desconhecido (#{command})"}
+    with {:ok, param_tokens} <- KV.Command.Parser.parse_params(params) do
+      case command do
+        "GET" -> execute(:GET, param_tokens)
+        "SET" -> execute(:SET, param_tokens)
+        "BEGIN" -> execute(:BEGIN, param_tokens)
+        "ROLLBACK" -> execute(:ROLLBACK, param_tokens)
+        "COMMIT" -> execute(:COMMIT, param_tokens)
+        _ -> {:error, "Comando Desconhecido (#{command})"}
+      end
     end
   end
 
@@ -82,9 +83,9 @@ defmodule Kv.Command do
     if (
       length(param_tokens) == 2 # Apenas 2 parâmetros
       and is_binary(Enum.at(param_tokens, 0)) # <chave> deve ser uma string
-      and Enum.at(param_tokens, 1) != :NIL # <valor> não pode ser :NIL
     ) do
-      :ok
+      # <valor> não pode ser :NIL
+      if ! is_nil(Enum.at(param_tokens, 1)), do: :ok, else: {:err, "Cannot SET key to NIL"}
     else
       {:err, "SET <chave> <valor> - Syntax Error"}
     end
