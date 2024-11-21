@@ -10,7 +10,7 @@ defmodule KV.Engine.Writer do
 
   # Criar e/ou abrir arquivo no local dado
   def init(log_path) do
-    fd = File.open!(log_path, [:write, :binary])
+    fd = File.open!(log_path, [:read, :write, :binary])
     {:ok, %{fd: fd, current_offset: 0}}
   end
 

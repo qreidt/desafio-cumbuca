@@ -15,6 +15,7 @@ defmodule KV.Engine.Reader do
   end
 
   # Ler o valor pertencente a chave informada
+  @spec get(pid(), binary()) :: {:ok, binary()|integer()|boolean()} | {:error, any()}
   def get(pid, key) do
     GenServer.call(pid, {:get, key})
   end

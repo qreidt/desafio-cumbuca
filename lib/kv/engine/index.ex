@@ -33,10 +33,10 @@ defmodule KV.Engine.Index do
     GenServer.call(__MODULE__, {:update, key, offset, size})
   end
 
+  @spec lookup(binary()) :: {:ok, {integer(), integer()}} | {:error, :not_found}
   def lookup(key) do
     GenServer.call(__MODULE__, {:lookup, key})
   end
-
 
   ###########
   ## GenServer Commands
@@ -49,7 +49,6 @@ defmodule KV.Engine.Index do
 
   # Recebe uma chave e retorna o valor para aquela respectiva chave
   def handle_call({:lookup, key}, _from, index_map) do
-    IO.inspect({key, index_map})
     {:reply, get_key_offset_size(key, index_map), index_map}
   end
 
