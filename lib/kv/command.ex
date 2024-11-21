@@ -3,7 +3,7 @@ defmodule KV.Command do
   @doc """
   Recebe a string completa do comando a ser executado, separa qual tipo de comando deve ser executado e realiza a validação dos parâmetros
   """
-  @spec execute(binary()) :: {:error, binary()} | {:ok, binary()}
+  @spec execute(binary()) :: {:err, binary()} | {:ok, binary()}
   def execute(complete_command) do
     [command, params] = split_command_and_params(complete_command)
 
@@ -14,7 +14,7 @@ defmodule KV.Command do
         "BEGIN" -> execute(:BEGIN, param_tokens)
         "ROLLBACK" -> execute(:ROLLBACK, param_tokens)
         "COMMIT" -> execute(:COMMIT, param_tokens)
-        _ -> {:error, "Comando Desconhecido (#{command})"}
+        _ -> {:err, "Comando Desconhecido (#{command})"}
       end
     end
   end
