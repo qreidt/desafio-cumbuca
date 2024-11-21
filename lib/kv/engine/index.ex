@@ -62,18 +62,24 @@ defmodule KV.Engine.Index do
     end
   end
 
+  # Reconstruír índices do arquivo em memória
   defp load_offsets(fd, offsets \\ %{}, current_offset \\ 0) do
+    # Posicionar reader no offset inicial de cada registro
     :file.position(fd, current_offset)
 
-    with <<_timestamp::big-unsigned-integer-64>> <- IO.binread(fd, 8),
-      <<key_size::big-unsigned-integer-16>> <- IO.binread(fd, 2),
+    # Ler conteúdo do registro
+    with <<key_size::big-unsigned-integer-16>> <- IO.binread(fd, 2),
       <<value_size::big-unsigned-integer-32>> <- IO.binread(fd, 4),
       key <- IO.binread(fd, key_size)
     do
-      value_absolute_offset = current_offset + 14 + key_size
 
+      # Recalcular offset absoluto do valor do registro
+      value_absolute_offset = current_offset + 6 + key_size
+
+      # Atualizar índice com registro
       offsets = Map.put(offsets, key, {value_absolute_offset, value_size})
 
+      # Atualizar o próximo registro
       load_offsets(fd, offsets, value_absolute_offset + value_size)
     else
       :eof -> {current_offset, offsets}
