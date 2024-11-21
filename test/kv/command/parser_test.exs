@@ -60,7 +60,7 @@ defmodule KV.Command.ParserTest do
     end
 
     test "parses NIL token" do
-      assert Parser.parse_token("NIL") == {:ok, :NIL}
+      assert Parser.parse_token("NIL") == {:ok, nil}
       assert Parser.parse_token("\"NIL\"") == {:ok, "NIL"}
     end
 

@@ -1,5 +1,8 @@
 defmodule KV.Command do
 
+  @doc """
+  Recebe a string completa do comando a ser executado, separa qual tipo de comando deve ser executado e realiza a validação dos parâmetros
+  """
   @spec execute(binary()) :: {:error, binary()} | {:ok, binary()}
   def execute(complete_command) do
     [command, params] = split_command_and_params(complete_command)
@@ -61,6 +64,13 @@ defmodule KV.Command do
   ## Validação de Comandos
   #####
 
+  def get_syntax_error_msg(), do: "GET <chave> - Syntax Error"
+  def set_syntax_error_msg(), do: "SET <chave> <valor> - Syntax Error"
+  def set_nil_value_error_msg(), do: "Cannot SET key to NIL"
+  def begin_syntax_error_msg(), do: "BEGIN - Syntax Error"
+  def rollback_syntax_error_msg(), do: "ROLLBACK - Syntax Error"
+  def commit_syntax_error_msg(), do: "COMMIT - Syntax Error"
+
 
   # Validar o comando GET
   # O comando deve sempre receber apenas um parâmetro (<chave>)
@@ -70,9 +80,10 @@ defmodule KV.Command do
     if length(param_tokens) == 1 and is_binary(Enum.at(param_tokens, 0)) do
       :ok
     else
-      {:err, "GET <chave> - Syntax Error"}
+      {:err, get_syntax_error_msg()}
     end
   end
+
 
   # Validar o comando SET
   # O comando deve sempre receber apenas 2 parâmetros (<chave> e <valor>)
@@ -85,9 +96,9 @@ defmodule KV.Command do
       and is_binary(Enum.at(param_tokens, 0)) # <chave> deve ser uma string
     ) do
       # <valor> não pode ser :NIL
-      if ! is_nil(Enum.at(param_tokens, 1)), do: :ok, else: {:err, "Cannot SET key to NIL"}
+      if ! is_nil(Enum.at(param_tokens, 1)), do: :ok, else: {:err, set_nil_value_error_msg()}
     else
-      {:err, "SET <chave> <valor> - Syntax Error"}
+      {:err, set_syntax_error_msg()}
     end
   end
 
