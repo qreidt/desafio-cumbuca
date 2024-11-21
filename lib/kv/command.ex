@@ -21,8 +21,14 @@ defmodule KV.Command do
 
   # @spec split_command_and_params(binary()) :: [binary(), binary()]
   defp split_command_and_params(complete_command) do
-    [command, params] = String.split(complete_command, " ", parts: 2)
-    if is_list(params), do: [command, ""], else: [command, params]
+    with :nomatch <- :binary.match(complete_command, " ") do
+      # Retornar string completa e sem parâmetros caso um espaço não tenha sido encontrado
+      [complete_command, ""]
+    else
+      _ -> # Casp exista um espaço, realizar o split
+        [command, params] = String.split(complete_command, " ", parts: 2)
+        if is_list(params), do: [command, ""], else: [command, params]
+    end
   end
 
   # Validar e executar o comando GET
