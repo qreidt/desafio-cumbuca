@@ -1,7 +1,7 @@
 defmodule KV.Engine.Reader do
   use GenServer
 
-  alias KV.Engine.Index
+  alias KV.Engine.{Index}
 
   # Iniciar GenServer com caminho para arquivo de log
   def start_link(log_path) do
@@ -25,10 +25,34 @@ defmodule KV.Engine.Reader do
   def handle_call({:get, key}, _from, %{fd: fd} = state) do
     case Index.lookup(key) do
       {:ok, {offset, size}} ->
-        {:reply, :file.pread(fd, offset, size), state}
+        response = read_registered_item(fd, offset, size)
+        {:reply, response, state}
 
       {:error, _} = error ->
         {:reply, error, state}
     end
+  end
+
+  defp read_registered_item(fd, offset, value_size) do
+    with {:ok, raw_data} <- :file.pread(fd, offset, value_size) do
+      <<type::integer-8, value_data::bitstring-size((value_size-1) * 8)>> = raw_data
+      read_binary_type(type, value_data)
+    end
+  end
+
+  defp read_binary_type(1, value_data)  do
+    {:ok, << value_data::binary >>}
+  end
+
+  defp read_binary_type(2, value_data) do
+    {:ok, :binary.decode_unsigned(value_data)}
+  end
+
+  defp read_binary_type(3, value_data)  do
+    {:ok, :binary.decode_unsigned(value_data) == 1}
+  end
+
+  defp read_binary_type(_, _)  do
+    {:error, :no_type}
   end
 end

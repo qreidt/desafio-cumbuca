@@ -53,14 +53,13 @@ defmodule KV.Engine do
 
   def handle_call({:get, key}, _from, state) do
     current_value = get_key_current_value(key, state.reader_pid)
-    {:reply, {current_value}, state}
+    {:reply, current_value, state}
   end
 
   defp get_key_current_value(key, reader_pid) do
-    with {:ok, value} <- Reader.get(reader_pid, key) do
-      value
-    else
-      _ -> nil
+    case Reader.get(reader_pid, key) do
+      {:ok, value} -> value
+      _error -> nil
     end
   end
 end
