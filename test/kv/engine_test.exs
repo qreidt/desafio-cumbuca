@@ -113,5 +113,40 @@ defmodule KV.EngineTest do
 
       assert transaction_value == 789
     end
+
+    test "fails if a transaction already exists" do
+      Engine.start_link(random_test_file())
+
+      Engine.begin_transaction("client")
+      assert Engine.begin_transaction("client") == {:error, :active_transaction}
+    end
+  end
+
+  describe "rollback_transaction/1" do
+    test "deletes the map for the client" do
+      {:ok, pid} = Engine.start_link(random_test_file())
+      Engine.begin_transaction("client")
+      Engine.rollback_transaction("client")
+
+      %{transactions: transactions} = :sys.get_state(pid)
+      assert Map.has_key?(transactions, "client") == false
+    end
+
+    test "it does't affect information outside the transaction" do
+      Engine.start_link(random_test_file())
+
+      Engine.put("client", "_", true)
+      Engine.begin_transaction("client")
+      Engine.put("client", "_", false)
+
+      Engine.rollback_transaction("client")
+      assert Engine.put("client", "_", 123) == {true, 123}
+    end
+
+    test "fails if a transaction doesn't exist" do
+      Engine.start_link(random_test_file())
+
+      assert Engine.rollback_transaction("client") == {:error, :no_active_transaction}
+    end
   end
 end
