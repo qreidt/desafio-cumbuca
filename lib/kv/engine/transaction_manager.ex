@@ -4,6 +4,7 @@ defmodule KV.Engine.TransactionManager do
   """
 
   alias KV.Engine
+  alias KV.Engine.{Index, Writer}
 
   @spec put(binary(), binary(), Engine.input_value(), map(), fun()) :: {Engine.output_value(), map()}
   @doc """
@@ -45,5 +46,42 @@ defmodule KV.Engine.TransactionManager do
       nil -> find_in_file.()
       value -> value
     end
+  end
+
+  @spec commit(binary(), map()) :: {:ok, map()} | {:error, map()}
+  @doc """
+  Validar chaves da transação e salvar em disco caso esteja tudo correto.
+  Falhar caso exista uma chave em disco mais nova do que o offset inicial da transação.
+  """
+  def commit(client, transactions) do
+    %{offset: offset, values: transaction_values} = Map.get(transactions, client)
+    result_transactions = Map.delete(transactions, client)
+    if transaction_can_be_commited?(offset, transaction_values) do
+      commit_transaction(transaction_values)
+      {:ok, result_transactions}
+    else
+      {:error, result_transactions}
+    end
+  end
+
+  defp transaction_can_be_commited?(offset, map) do
+    Enum.reduce_while(map, nil, fn {k, _}, _acc ->
+      if newer_key_exists?(offset, k) do
+        {:halt, false}
+      else
+        {:cont, true}
+      end
+    end)
+  end
+
+  defp newer_key_exists?(offset, key) do
+    case Index.lookup(key) do
+      {:ok, {value_offset, _}} -> offset <= value_offset
+      {:error, :not_found} -> false
+    end
+  end
+
+  defp commit_transaction(values_map) do
+    Enum.each(values_map, fn {k, v} -> Writer.put(k, v) end)
   end
 end

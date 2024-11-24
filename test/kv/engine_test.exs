@@ -114,6 +114,18 @@ defmodule KV.EngineTest do
       assert transaction_value == 789
     end
 
+    test "other clients can't see values in the transaction" do
+      Engine.start_link(random_test_file())
+
+      # offset = 8 bytes + key length = uint16 + uint32 + key + uint8
+      Engine.put("client-A", "key", 123)
+      Engine.begin_transaction("client-A")
+      Engine.put("client-A", "key", 456)
+
+      assert Engine.get("client-A", "key") == 456
+      assert Engine.get("client-B", "key") == 123
+    end
+
     test "fails if a transaction already exists" do
       Engine.start_link(random_test_file())
 
@@ -147,6 +159,33 @@ defmodule KV.EngineTest do
       Engine.start_link(random_test_file())
 
       assert Engine.rollback_transaction("client") == {:error, :no_active_transaction}
+    end
+  end
+
+  describe "commit_transaction/1" do
+    test "commits changes transaction to disk" do
+      Engine.start_link(random_test_file())
+
+      Engine.put("client", "key", 12)
+      Engine.begin_transaction("client")
+      Engine.put("client", "key", 345)
+      Engine.put("client", "key", 678)
+
+      assert Engine.get("client-B", "key") == 12
+
+      Engine.commit_transaction("client")
+      assert Engine.get("client-B", "key") == 678
+    end
+
+    test "fails if a there is a conflict with a key newer than the transaction" do
+      Engine.start_link(random_test_file())
+
+      Engine.put("client", "key", 12)
+      Engine.begin_transaction("client")
+      Engine.put("client", "key", 345)
+      Engine.put("client-B", "key", 678)
+
+      assert Engine.commit_transaction("client") == :error
     end
   end
 end

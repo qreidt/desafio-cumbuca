@@ -56,6 +56,11 @@ defmodule KV.Engine do
     GenServer.call(__MODULE__, {:rollback_transaction, client})
   end
 
+  @spec commit_transaction(binary()) :: :ok | {:error, :no_active_transaction}
+  def commit_transaction(client) do
+    GenServer.call(__MODULE__, {:commit_transaction, client})
+  end
+
   ###########
   ## GenServer Commands
   ###########
@@ -103,6 +108,15 @@ defmodule KV.Engine do
     if client_has_transaction?(client, state.transactions) do
       transactions = Map.delete(state.transactions, client)
       {:reply, :ok, %{state | transactions: transactions}}
+    else
+      {:reply, {:error, :no_active_transaction}, state}
+    end
+  end
+
+  def handle_call({:commit_transaction, client}, _from, state) do
+    if client_has_transaction?(client, state.transactions) do
+      {result, transactions} = TransactionManager.commit(client, state.transactions)
+      {:reply, result, %{state | transactions: transactions}}
     else
       {:reply, {:error, :no_active_transaction}, state}
     end
