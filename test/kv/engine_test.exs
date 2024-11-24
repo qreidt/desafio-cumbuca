@@ -23,51 +23,95 @@ defmodule KV.EngineTest do
     path <> "#{rand}.db"
   end
 
-  describe "get/1" do
+  describe "get/2" do
     test "reads strings from database file" do
       Engine.start_link(random_test_file())
-      Engine.put("teste", "teste123")
+      Engine.put("client", "teste", "teste123")
 
-      assert Engine.get("teste") == "teste123"
+      assert Engine.get("client", "teste") == "teste123"
     end
 
     test "reads integers from database file" do
       Engine.start_link(random_test_file())
-      Engine.put("_int", 123)
+      Engine.put("client", "_int", 123)
 
-      assert Engine.get("_int") == 123
+      assert Engine.get("client", "_int") == 123
     end
 
     test "reads booleans from database file" do
       Engine.start_link(random_test_file())
-      Engine.put("_true", true)
-      Engine.put("_false", false)
+      Engine.put("client", "_true", true)
+      Engine.put("client", "_false", false)
 
-      assert Engine.get("_true") == true
-      assert Engine.get("_false") == false
+      assert Engine.get("client", "_true") == true
+      assert Engine.get("client", "_false") == false
     end
   end
 
-  describe "put/2" do
+  describe "put/3" do
     test "puts strings into the database file" do
       Engine.start_link(random_test_file())
 
-      assert Engine.put("teste", "teste123") == {nil, "teste123"}
-      assert Engine.put("teste", "teste456") == {"teste123", "teste456"}
+      assert Engine.put("client", "teste", "teste123") == {nil, "teste123"}
+      assert Engine.put("client", "teste", "teste456") == {"teste123", "teste456"}
     end
 
     test "puts integers into the database file" do
       Engine.start_link(random_test_file())
 
-      assert Engine.put("_int", 123) == {nil, 123}
-      assert Engine.put("_int", 456) == {123, 456}
+      assert Engine.put("client", "_int", 123) == {nil, 123}
+      assert Engine.put("client", "_int", 456) == {123, 456}
     end
 
     test "puts booleans into the database file" do
       Engine.start_link(random_test_file())
 
-      assert Engine.put("_bool", true) == {nil, true}
-      assert Engine.put("_bool", 456) == {true, 456}
+      assert Engine.put("client", "_bool", true) == {nil, true}
+      assert Engine.put("client", "_bool", 456) == {true, 456}
+    end
+  end
+
+  describe "begin_transaction/1" do
+    test "stars a new map for the client" do
+      {:ok, pid} = Engine.start_link(random_test_file())
+      Engine.begin_transaction("client")
+
+      %{transactions: transactions} = :sys.get_state(pid)
+      assert Map.has_key?(transactions, "client")
+    end
+
+    test "gets the current file offset" do
+      {:ok, pid} = Engine.start_link(random_test_file())
+
+      # offset = 8 bytes + key length = uint16 + uint32 + key + uint8
+      Engine.put("client", "_", true)
+      Engine.put("client", "_", true)
+
+      Engine.begin_transaction("client")
+
+      %{transactions: %{"client" => %{offset: offset}}} = :sys.get_state(pid)
+      assert offset == 18
+    end
+
+    test "transaction puts data in-memory only" do
+      {:ok, pid} = Engine.start_link(random_test_file())
+
+      # offset = 8 bytes + key length = uint16 + uint32 + key + uint8
+      Engine.put("client", "key_1", 123)
+      Engine.put("client", "key_2", 456)
+
+      Engine.begin_transaction("client")
+
+      {old_value, new_value} = Engine.put("client", "key_2", 789)
+
+      assert old_value == 456
+      assert new_value == 789
+
+      %{transactions: %{"client" => %{
+        values: %{"key_2" => transaction_value}}
+      }} = :sys.get_state(pid)
+
+      assert transaction_value == 789
     end
   end
 end

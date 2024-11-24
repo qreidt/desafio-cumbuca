@@ -11,15 +11,15 @@ defmodule KV.Engine.Index do
     GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
   end
 
-  def init(:empty), do: {:ok, %{}}
+  def init(:empty), do: {:ok, %{current_offset: 0, index_map: %{}}}
 
   # Criar e/ou abrir arquivo no local dado
   def init(log_path) do
     with {:ok, fd} <- File.open(log_path, [:read, :binary]),
-       {_current_offset, offsets} = load_offsets(fd)
+       {current_offset, offsets} = load_offsets(fd)
     do
       File.close(fd)
-      {:ok, offsets}
+      {:ok, %{current_offset: current_offset, index_map: offsets}}
     else
       _ -> init(:empty)
     end
@@ -43,13 +43,14 @@ defmodule KV.Engine.Index do
   ###########
 
   # Atualiza uma chave no index do GenServer
-  def handle_call({:update, key, offset, size}, _from, index_map) do
-    {:reply, :ok, Map.put(index_map, key, {offset, size})}
+  def handle_call({:update, key, offset, size}, _from, state) do
+    index_map = Map.put(state.index_map, key, {offset, size})
+    {:reply, :ok, %{current_offset: offset + size, index_map: index_map}}
   end
 
   # Recebe uma chave e retorna o valor para aquela respectiva chave
-  def handle_call({:lookup, key}, _from, index_map) do
-    {:reply, get_key_offset_size(key, index_map), index_map}
+  def handle_call({:lookup, key}, _from, %{index_map: index_map} = state) do
+    {:reply, get_key_offset_size(key, index_map), state}
   end
 
   # Helper para determinar o indice para um novo insert

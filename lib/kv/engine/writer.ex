@@ -27,6 +27,10 @@ defmodule KV.Engine.Writer do
     GenServer.call(__MODULE__, {:put, key, value})
   end
 
+  def get_current_offset() do
+    GenServer.call(__MODULE__, :get_current_offset)
+  end
+
   # Inserir dados no arquivo de destivo
   # Atualizar índice e atualizar estado do GenServer
   def handle_call({:put, key, value}, _from, %{fd: fd, current_offset: current_offset} = state) do
@@ -46,6 +50,11 @@ defmodule KV.Engine.Writer do
     # Atualizar estado
     new_state = %{state | current_offset: value_offset + value_size}
     {:reply, {:ok, {value_offset, value_size}}, new_state}
+  end
+
+  # Retorna o valor do offset atual
+  def handle_call(:get_current_offset, _from, %{current_offset: current_offset} = state) do
+    {:reply, current_offset, state}
   end
 
   # Codifica os valores de chave e valor para binário.
