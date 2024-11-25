@@ -28,3 +28,6 @@ kv-*.tar
 # Ignore JetBrains configurations
 /.idea
 /.vscode
+
+# Data files
+/data/
