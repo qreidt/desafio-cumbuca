@@ -62,6 +62,34 @@ curl --request POST \
   --header 'X-Client-Name: Client-A' \
   --data 'BEGIN'
 ```
+## Armazenamento
+Abaixo, exemplo de um `hexdump` do arquivo de log com os seguintes registros persistidos e como são compostos em disco:
+1. ABC => 1
+   - Tamanho da chave (uint16) 
+   - Tamanho do valor (uint32)
+   - Chave (3 chars)
+   - Tipo do valor (int = 2) (uint8)
+   - Valor do tipo inteiro (uint64)
+2. ABC => 2
+   - Tamanho da chave (uint16)
+   - Tamanho do valor (uint32)
+   - Chave (3 chars)
+   - Tipo do valor (int = 2) (uint8)
+   - Valor do tipo inteiro (uint64)
+3. DEF => GHI
+    - Tamanho da chave (uint16)
+    - Tamanho do valor (uint32)
+    - Chave (3 chars)
+    - Tipo do valor (binary = 1) (uint8)
+    - Valor do tipo string (3 chars)
+4. JKL => true
+    - Tamanho da chave (uint16)
+    - Tamanho do valor (uint32)
+    - Chave (3 chars)
+    - Tipo do valor (bool = 3) (uint8)
+    - Valor do tipo boolean (uint8)
+
+![database.db hexdump](https://github.com/qreidt/desafio-cumbuca/blob/main/docs/images/hexdump.png?raw=true)
 
 ## Melhorias
 A seguir estão passos de como melhorar o projeto:
