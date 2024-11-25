@@ -121,5 +121,18 @@ defmodule KVWeb.Controllers.KvControllerTest do
       Engine.put(client, key, 2)
       assert send_request(conn, client, "COMMIT") == "ERR \"No active transaction\""
     end
+
+    test "COMMIT fails if a key is conflicting with another one", %{conn: conn} do
+      client_1 = DatabaseEngineHelper.get_random_string()
+      client_2 = DatabaseEngineHelper.get_random_string()
+      key = DatabaseEngineHelper.get_random_string()
+
+      Engine.put(client_1, key, 1)
+      Engine.put(client_1, key, 2)
+      Engine.begin_transaction(client_1)
+      Engine.put(client_1, key, 3)
+      Engine.put(client_2, key, 4)
+      assert send_request(conn, client_1, "COMMIT") == "ERR \"Atomicity failure (#{key})\""
+    end
   end
 end

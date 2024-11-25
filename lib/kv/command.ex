@@ -79,6 +79,8 @@ defmodule KV.Command do
       case Engine.commit_transaction(client) do
         :ok -> {:ok, "OK"}
         {:error, :no_active_transaction} -> {:err, "ERR \"No active transaction\""}
+        {:error, failed_keys} ->
+          {:err, "ERR \"Atomicity failure (#{Enum.join(failed_keys, ", ")})\""}
       end
     end
   end

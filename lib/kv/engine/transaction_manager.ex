@@ -48,7 +48,7 @@ defmodule KV.Engine.TransactionManager do
     end
   end
 
-  @spec commit(binary(), map()) :: {:ok, map()} | {:error, map()}
+  @spec commit(binary(), map()) :: {:ok, map()} | {:error, map(), [binary()]}
   @doc """
   Validar chaves da transação e salvar em disco caso esteja tudo correto.
   Falhar caso exista uma chave em disco mais nova do que o offset inicial da transação.
@@ -56,22 +56,31 @@ defmodule KV.Engine.TransactionManager do
   def commit(client, transactions) do
     %{offset: offset, values: transaction_values} = Map.get(transactions, client)
     result_transactions = Map.delete(transactions, client)
-    if transaction_can_be_commited?(offset, transaction_values) do
-      commit_transaction(transaction_values)
-      {:ok, result_transactions}
-    else
-      {:error, result_transactions}
+
+    case transaction_can_be_commited?(offset, transaction_values) do
+      :ok ->
+        commit_transaction(transaction_values)
+        {:ok, result_transactions}
+
+      {:error, conflict_keys} ->
+        {:error, result_transactions, conflict_keys}
     end
   end
 
   defp transaction_can_be_commited?(offset, map) do
-    Enum.reduce_while(map, nil, fn {k, _}, _acc ->
+    conflict_keys = Enum.reduce(map, [], fn {k, _}, agg ->
       if newer_key_exists?(offset, k) do
-        {:halt, false}
+        [k | agg]
       else
-        {:cont, true}
+        agg
       end
     end)
+
+    if conflict_keys == [] do
+      :ok
+    else
+      {:error, conflict_keys}
+    end
   end
 
   defp newer_key_exists?(offset, key) do

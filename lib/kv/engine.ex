@@ -57,7 +57,7 @@ defmodule KV.Engine do
     GenServer.call(__MODULE__, {:rollback_transaction, client})
   end
 
-  @spec commit_transaction(binary()) :: :ok | {:error, :no_active_transaction}
+  @spec commit_transaction(binary()) :: :ok | {:error, [binary()]} | {:error, :no_active_transaction}
   def commit_transaction(client) do
     GenServer.call(__MODULE__, {:commit_transaction, client})
   end
@@ -116,8 +116,13 @@ defmodule KV.Engine do
 
   def handle_call({:commit_transaction, client}, _from, state) do
     if client_has_transaction?(client, state.transactions) do
-      {result, transactions} = TransactionManager.commit(client, state.transactions)
-      {:reply, result, %{state | transactions: transactions}}
+      case TransactionManager.commit(client, state.transactions) do
+        {:ok, transactions} ->
+          {:reply, :ok, %{state | transactions: transactions}}
+
+        {:error, transactions, conflict_keys} ->
+          {:reply, {:error, conflict_keys}, %{state | transactions: transactions}}
+      end
     else
       {:reply, {:error, :no_active_transaction}, state}
     end
