@@ -68,8 +68,8 @@ defmodule KV.Command.Parser do
   # Validating Boolean
   defp is_boolean_token?(token), do: token in @boolean_values
 
-  defp parse_boolean("TRUE"), do: :TRUE
-  defp parse_boolean("FALSE"), do: :FALSE
+  defp parse_boolean("TRUE"), do: true
+  defp parse_boolean("FALSE"), do: false
 
   # Validating Integer
   defp is_integer_token?(token), do: String.match?(token, ~r/^\d+$/)
