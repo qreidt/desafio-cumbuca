@@ -5,9 +5,11 @@ defmodule KVWeb.Controllers.KvController do
   Função principal para receber requisições de KVs
   """
   def handle(conn, _) do
+    client = conn.assigns.x_client_name
+
     with {:ok, body, _} <- Plug.Conn.read_body(conn),
-      {:ok, response} <- KV.Command.execute(body) do
-      text(conn, response)
+      {:ok, response} <- KV.Command.execute(client, body) do
+        text(conn, response)
 
     else
       {:err, reason} ->

@@ -8,7 +8,8 @@ defmodule KV.Engine do
 
   # Iniciar GenServer com caminho para arquivo de log
   @spec start_link() :: :ignore | {:error, any()} | {:ok, pid()}
-  def start_link(log_path \\ "data/database.db") do
+  def start_link(_opts \\ []) do
+    log_path = Application.get_env(:phoenix, :log_path)
     GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
   end
 

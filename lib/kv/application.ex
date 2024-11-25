@@ -10,10 +10,12 @@ defmodule KV.Application do
     children = [
       KVWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:kv, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: KV.PubSub},
+      # {Phoenix.PubSub, name: KV.PubSub},
       # Start a worker by calling: KV.Worker.start_link(arg)
       # {KV.Worker, arg},
       # Start to serve requests, typically the last entry
+
+      KV.Engine,
       KVWeb.Endpoint
     ]
 
