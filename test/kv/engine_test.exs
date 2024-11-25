@@ -174,7 +174,7 @@ defmodule KV.EngineTest do
       Engine.put(client, key, 345)
       Engine.put("client-B", key, 678)
 
-      assert Engine.commit_transaction(client) == :error
+      assert Engine.commit_transaction(client) == {:error, [key]}
     end
   end
 end

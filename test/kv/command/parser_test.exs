@@ -10,8 +10,8 @@ defmodule KV.Command.ParserTest do
     end
 
     test "parses booleans" do
-      assert Parser.parse_params("TRUE") == {:ok, [:TRUE]}
-      assert Parser.parse_params("FALSE") == {:ok, [:FALSE]}
+      assert Parser.parse_params("TRUE") == {:ok, [true]}
+      assert Parser.parse_params("FALSE") == {:ok, [false]}
     end
 
     test "parses integers" do
@@ -28,7 +28,7 @@ defmodule KV.Command.ParserTest do
 
     test "handles mixed inputs" do
       input = "ABC 10 \"AB C\" TRUE"
-      assert Parser.parse_params(input) == {:ok, ["ABC", 10, "AB C", :TRUE]}
+      assert Parser.parse_params(input) == {:ok, ["ABC", 10, "AB C", true]}
     end
 
     test "returns {:err, :syntax_error} for invalid quoted strings" do
@@ -47,8 +47,8 @@ defmodule KV.Command.ParserTest do
 
   describe "parse_token/1" do
     test "parses boolean tokens" do
-      assert Parser.parse_token("TRUE") == {:ok, :TRUE}
-      assert Parser.parse_token("FALSE") == {:ok, :FALSE}
+      assert Parser.parse_token("TRUE") == {:ok, true}
+      assert Parser.parse_token("FALSE") == {:ok, false}
       assert Parser.parse_token("\"TRUE\"") == {:ok, "TRUE"}
       assert Parser.parse_token("\"FALSE\"") == {:ok, "FALSE"}
     end
