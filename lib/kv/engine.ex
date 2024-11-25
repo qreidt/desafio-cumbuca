@@ -14,8 +14,8 @@ defmodule KV.Engine do
   end
 
   def init(log_path) do
-    Index.start_link(log_path)
     Writer.start_link(log_path)
+    Index.start_link(log_path)
     {:ok, reader_pid} = Reader.start_link(log_path)
 
     {:ok,

@@ -17,7 +17,7 @@ defmodule KV.Engine.Writer do
 
   # Criar e/ou abrir arquivo no local dado
   def init(log_path) do
-    fd = File.open!(log_path, [:read, :write, :binary])
+    fd = File.open!(log_path, [:read, :write, :binary, :append])
     {:ok, %{fd: fd, current_offset: 0}}
   end
 
@@ -28,6 +28,11 @@ defmodule KV.Engine.Writer do
 
   def get_current_offset() do
     GenServer.call(__MODULE__, :get_current_offset)
+  end
+
+  @spec set_offset(integer()) :: :ok
+  def set_offset(offset) do
+    GenServer.cast(__MODULE__, {:set_offset, offset})
   end
 
   # Inserir dados no arquivo de destivo
@@ -54,6 +59,11 @@ defmodule KV.Engine.Writer do
   # Retorna o valor do offset atual
   def handle_call(:get_current_offset, _from, %{current_offset: current_offset} = state) do
     {:reply, current_offset, state}
+  end
+
+  # Retorna o valor do offset atual
+  def handle_cast({:set_offset, offset}, state) do
+    {:noreply, %{state | current_offset: offset}}
   end
 
   # Codifica os valores de chave e valor para binário.

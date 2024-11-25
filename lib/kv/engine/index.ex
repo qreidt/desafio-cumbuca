@@ -2,6 +2,8 @@ defmodule KV.Engine.Index do
 
   use GenServer
 
+  alias KV.Engine.Writer
+
   # Iniciar o GenServer com Map vazio
   def start_link([]) do
     GenServer.start_link(__MODULE__, :empty, name: __MODULE__)
@@ -19,7 +21,8 @@ defmodule KV.Engine.Index do
        {current_offset, offsets} = load_offsets(fd)
     do
       File.close(fd)
-      {:ok, %{current_offset: current_offset, index_map: offsets}}
+      Writer.set_offset(current_offset)
+      {:ok, %{index_map: offsets}}
     else
       _ -> init(:empty)
     end
